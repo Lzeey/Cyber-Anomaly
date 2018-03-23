@@ -72,3 +72,4 @@ def retrieve_IDS(path=DATA_DIR):
     
 if __name__ == "__main__":
     retrieve_BlueCoat()
+    retrieve_SotM30()
