@@ -7,6 +7,7 @@ Downloader for unsup tutorial
 """
 import os
 import requests
+import gzip
 
 from tqdm import tqdm
 
@@ -47,7 +48,7 @@ def retrieve_BlueCoat(path=DATA_DIR):
         download_file(url, zip_file)
     
     #Unpack zip file
-    
+    unzip(zip_file)
     return
 
 def retrieve_SotM30(path=DATA_DIR):
@@ -64,12 +65,22 @@ def retrieve_SotM30(path=DATA_DIR):
         download_file(url, zip_file)
     
     #Unpack file
-    
+    unzip(zip_file, os.path.join(full_path, 'honeynet-Feb1_FebXX.log'))
     return
 
+def unzip(filename, dst_file=None):
+    assert(filename.endswith('.gz'))
+    if dst_file is None and len(filename) > 3:
+        dst_file = filename[:-3]
+
+    with gzip.open(filename, 'rb') as f_gz:
+        with open(dst_file, 'wb') as f:
+            f.write(f_gz.read())
+
 def retrieve_IDS(path=DATA_DIR):
-    raise(NotImplemented)
+    raise(NotImplementedError)
     
 if __name__ == "__main__":
-    retrieve_BlueCoat()
+    #etrieve_BlueCoat()
     retrieve_SotM30()
+
