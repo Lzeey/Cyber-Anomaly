@@ -9,7 +9,10 @@ import os
 import requests
 import gzip
 
-from tqdm import tqdm
+try:
+    from tqdm import tqdm
+except ImportError:
+    tqdm = None
 
 DATA_DIR = 'data'
 
@@ -21,12 +24,16 @@ def download_file(url, destination):
     total_size = int(r.headers.get('content-length', 0))
     block_size = 1024
     wrote = 0
-    with open(destination, 'wb') as f:
-        for data in tqdm(r.iter_content(block_size), 
+    if tqdm is None:
+        dl_iter = r.iter_content(block_size)
+    else:
+        dl_iter = tqdm(r.iter_content(block_size), 
                          total=block_size//block_size,
                          unit='KB',
                          unit_divisor=1024,
-                         unit_scale=True):
+                         unit_scale=True)
+    with open(destination, 'wb') as f:
+        for data in dl_iter:
             wrote += len(data)
             f.write(data)
     if total_size > 0 and wrote != total_size:
@@ -46,9 +53,12 @@ def retrieve_BlueCoat(path=DATA_DIR):
         print('Downloading bluecoat data')
         url = 'http://log-sharing.dreamhosters.com/bluecoat_proxy_big.zip'
         download_file(url, zip_file)
+    else:
+        print("File already exists: %s" % zip_file)
+        return
     
     #Unpack zip file
-    unzip(zip_file)
+    #unzip(zip_file)
     return
 
 def retrieve_SotM30(path=DATA_DIR):
@@ -63,12 +73,15 @@ def retrieve_SotM30(path=DATA_DIR):
         print('Downloading SoTM30 data')
         url = 'http://log-sharing.dreamhosters.com/SotM30-anton.log.gz'
         download_file(url, zip_file)
+    else:
+        print("File already exists: %s" % zip_file)
+        return
     
     #Unpack file
-    unzip(zip_file, os.path.join(full_path, 'honeynet-Feb1_FebXX.log'))
+    unzip_gzip(zip_file, os.path.join(full_path, 'honeynet-Feb1_FebXX.log'))
     return
 
-def unzip(filename, dst_file=None):
+def unzip_gzip(filename, dst_file=None):
     assert(filename.endswith('.gz'))
     if dst_file is None and len(filename) > 3:
         dst_file = filename[:-3]
